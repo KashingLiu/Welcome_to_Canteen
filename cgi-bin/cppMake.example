@@ -1,0 +1,13 @@
+test = receive_test
+all: target
+
+target: cJSON.o $(test).o
+	g++ -o $(test).cgi cJSON.o $(test).o -lcgicc -lm
+cJSON.o: cJSON.c cJSON.h
+	gcc -c -o cJSON.o cJSON.c
+$(test).o: $(test).cpp
+	g++ -c -o $(test).o $(test).cpp
+clean:
+	rm -rf $(test).cgi *.o
+
+refresh: clean target

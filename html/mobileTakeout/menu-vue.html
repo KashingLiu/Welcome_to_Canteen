@@ -1,0 +1,150 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+    <title>菜单页</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+<div id="app" class="main">
+    <div class="left-menu"  id="left" style="overflow: hidden">
+        <ul id="category-list">
+            <li v-for="(value,key,index) in jsn.category" v-bind:class="{active:key==num}" @click="changeactive(key)" >
+                <span style="font-size: 18px;">{{value.name}}
+                </span>
+            </li>
+        </ul>
+    </div>
+    <div class="con">
+        <div v-for="(value1,key1,index1) in jsn.items" class="right-con con-active" style="height:720px;overflow: auto;" v-bind:style="{'display': (index1!=num)?'none':''}">
+            <!--{{index1}}. {{key1}}: {{value1}}-->
+            <ul>
+                <li v-for="(value2,key2,index2) in value1" style="height: 100px;">
+                    <div class="menu-img"><img :src=value2.img width="80px" height="80px"></div>
+                    <div class="menu-txt">
+                        <h4 style="font-size: 20px;font-weight: bold;">{{value2.name}}</h4>
+                        <p class="list1" style="font-size:16px;">{{value2.detail}}</p>
+                        <p class="list2" style="font-size:30px;">
+                            <b>￥</b><b>{{value2.price}}</b>
+                        </p><div class="btn">
+                        <button class="minus" v-bind:style="{'display': (value2.amount>0)?'inline-block':'none', 'margin-right': (value2.amount>0)?'-6px':'0px' }" @click="minus(key1,key2)">
+                            <img src="./img/minus.png" style="width: 34px;height: 34px;">
+                        </button>
+                        <i style="font-size: 20px;margin-right: 10px;" v-bind:style="{display: (value2.amount>0)?'inline-block':'none' }">{{value2.amount}}</i>
+                        <button class="add" @click="add(key1,key2)" style="margin-left: -14px;">
+                            <img src="./img/add.png" style="width: 34px;height: 34px;">
+                        </button>
+                    </div>
+
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+    <div class="up1"></div>
+    <div class="shopcart-list fold-transition" style="">
+        <div class="list-header">
+            <h1 class="title">购物车</h1>
+            <span class="empty">清空</span>
+        </div>
+        <div class="list-content">
+            <ul></ul>
+        </div>
+    </div>
+    <div class="footer">
+        <div class="left" style="margin-top: 12px;">已选：
+            <span id="cartN">
+			<span id="totalcountshow">{{totalAmount}}</span>份　总计：￥<span id="totalpriceshow">{{totalMoney}}</span></span>元
+        </div>
+        <div class="right">
+            <button id="btnselect" class="xhlbtn" v-bind:class="{disable:totalAmount==0}" @click="gotoBill()">去结算</button>
+
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="js/jquery.min.js"></script>
+<script type="text/javascript" src="js/vue.min.js"></script>
+<script>
+    const app = new Vue({
+        el: '#app',
+        data: {
+            jsn: {},
+            amount: [],
+            num: 0
+        },
+        mounted() {
+            for (key in this.jsn.items)  {
+                this.jsn.items[key].map((v,i)=>{
+                    this.$set(v,'amount',0);
+                    this.$set(v,'img', "./img/"+v.img);
+                })
+            }
+        },
+        computed: {
+            totalAmount () {
+                let sum = 0;
+                let me = this;
+                for (key in this.jsn.items) {
+                    for (let i = 0; i < this.jsn.items[key].length; i++) {
+                        sum += this.jsn.items[key][i].amount
+                    }
+                }
+                return sum;
+            },
+            totalMoney () {
+                let sum = 0;
+                let me = this;
+                for (key in this.jsn.items) {
+                    for (let i = 0; i < this.jsn.items[key].length; i++) {
+                        sum += this.jsn.items[key][i].amount* this.jsn.items[key][i].price;
+                    }
+                }
+                return sum;
+            }
+        },
+        created() {
+            fetch('../../cgi-bin/menu/send_menu.cgi')
+                .then(response => response.json())
+                .then(json => {
+                    this.jsn = json;
+                    for (key in this.jsn.items)  {
+                        this.jsn.items[key].map((v,i)=>{
+                            this.$set(v,'amount',0);
+                            this.$set(v,'img', "./img/"+v.img);
+                            console.log(v);
+                    })}
+                })
+        },
+        methods:{
+            add(i,j) {
+                this.jsn.items[i][j].amount++;
+            },
+            minus(i,j) {
+                if (this.jsn.items[i][j].amount !== 0) {
+                    this.jsn.items[i][j].amount--
+                }
+            },
+            changeactive(index) {
+                this.num = index
+            },
+            gotoBill() {
+                if (this.totalAmount !== 0) {
+                    window.location.href = './check_nobtn.html'+'?total='+this.totalMoney;
+                }
+            }
+        }
+    });
+</script>
+<script type="text/javascript">
+    /**禁止网页无关动作*/
+    document.oncontextmenu=function() {return false;};
+    document.oncopy=function() {return false;};
+    document.selection=function() {return false;};
+    document.ondragstart=function() {return false;};
+    document.onselectstart=function() {return false;};
+</script>
+</body>
+</html>
